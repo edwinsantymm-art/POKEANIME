@@ -4,6 +4,7 @@ export type Profesor = {
   id: number;
   nombre: string;
   profesion: string;
+  universidad?: string | null;
   imagen: string | null;
   habilidades: string[];
 };

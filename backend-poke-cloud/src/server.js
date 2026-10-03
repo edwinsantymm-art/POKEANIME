@@ -3,7 +3,6 @@ const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
 const pool = require('./db');
-const syncAndStorePokemons = require('./pokemonesIniciales');
 const asegurarProfesores = require('./profesoresIniciales');
 
 const app = express();
@@ -17,7 +16,7 @@ const swaggerSpec = swaggerJsDoc({
     info: {
       title: 'Microservicio Neon PostgreSQL + Swagger',
       version: '1.0.0',
-      description: 'API que almacena datos de API externa en Neon DB'
+      description: 'API de Pokémon y profesores con Neon PostgreSQL como fuente de consulta.'
     },
     servers: [{ url: '/' }]
   },
@@ -70,7 +69,16 @@ app.get('/api/pokemons', async (req, res) => {
 app.get('/api/pokemons/:name', async (req, res) => {
   try {
     const { name } = req.params;
-    const result = await pool.query('SELECT * FROM pokemons WHERE LOWER(name) = LOWER($1)', [name]);
+    const esNumero = /^\d+$/.test(name);
+    const valor = esNumero ? Number(name) : name;
+    if (esNumero && !Number.isSafeInteger(valor)) {
+      return res.status(404).json({ message: 'Pokémon no encontrado en la BD' });
+    }
+
+    const consulta = esNumero
+      ? 'SELECT * FROM pokemons WHERE poke_id = $1'
+      : 'SELECT * FROM pokemons WHERE LOWER(name) = LOWER($1)';
+    const result = await pool.query(consulta, [valor]);
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Pokémon no encontrado en la BD' });
     }
@@ -129,11 +137,35 @@ app.get('/api/profesores/:id', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
-  console.log(`Documentación Swagger disponible en /docs`);
-  
-  // Ejecuta la sincronización automática con la API e inserta en Neon al iniciar
-  await syncAndStorePokemons(10);
-  await asegurarProfesores();
+
+async function iniciarServidor() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS pokemons (
+      id SERIAL PRIMARY KEY,
+      poke_id INT UNIQUE NOT NULL,
+      name VARCHAR(50) NOT NULL,
+      type VARCHAR(100) NOT NULL,
+      altura NUMERIC(5, 2),
+      peso NUMERIC(5, 2),
+      habilidad VARCHAR(100),
+      image_url TEXT,
+      imagen_shiny TEXT,
+      imagen_trasera TEXT,
+      movimientos TEXT[],
+      descripcion TEXT
+    );
+  `);
+
+  app.listen(PORT, async () => {
+    console.log(`Servidor escuchando en el puerto ${PORT}`);
+    console.log('Búsquedas de Pokémon consultan únicamente Neon PostgreSQL.');
+    console.log('Documentación Swagger disponible en /docs');
+    await asegurarProfesores();
+  });
+}
+
+iniciarServidor().catch(async (error) => {
+  console.error('No se pudo inicializar la base de datos Neon:', error);
+  await pool.end();
+  process.exit(1);
 });

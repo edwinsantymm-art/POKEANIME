@@ -18,7 +18,10 @@ export default function ProfesorCard({ profesor }: { profesor: Profesor }) {
       </View>
 
       <Text style={styles.nombre}>{profesor.nombre}</Text>
-      <Text style={styles.profesion}>{profesor.profesion}</Text>
+      <Text style={[styles.profesion, !profesor.universidad && styles.profesionSinUniversidad]}>
+        {profesor.profesion}
+      </Text>
+      {profesor.universidad && <Text style={styles.universidad}>{profesor.universidad}</Text>}
 
       {!!profesor.habilidades?.length && (
         <View style={styles.habilidades}>
@@ -77,6 +80,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.morado,
     marginTop: 2,
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  profesionSinUniversidad: {
+    marginBottom: 10,
+  },
+  universidad: {
+    fontSize: 13,
+    color: colors.texto,
     marginBottom: 10,
     textAlign: 'center',
   },

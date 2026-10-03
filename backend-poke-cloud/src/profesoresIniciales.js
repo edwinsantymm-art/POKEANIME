@@ -25,10 +25,12 @@ async function asegurarProfesores() {
         id SERIAL PRIMARY KEY,
         nombre VARCHAR(100) NOT NULL,
         profesion VARCHAR(100) NOT NULL,
+        universidad VARCHAR(150),
         imagen TEXT,
         habilidades TEXT[]
       );
     `);
+    await pool.query('ALTER TABLE profesores ADD COLUMN IF NOT EXISTS universidad VARCHAR(150)');
 
     // 2. Sembrar solo si está vacía (para no duplicar en cada reinicio del servidor)
     const { rows } = await pool.query('SELECT COUNT(*)::int AS total FROM profesores');
