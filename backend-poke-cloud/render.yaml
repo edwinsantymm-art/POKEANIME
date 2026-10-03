@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: pokemon-service
+    runtime: node
+    plan: free
+    rootDir: backend-poke-cloud
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # pegar aquí el connection string de Neon (nunca en git)
+      - key: NODE_VERSION
+        value: 20.11.0

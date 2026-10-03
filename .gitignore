@@ -32,6 +32,12 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+
+# backend-anime-cloud (Python)
+venv/
+__pycache__/
+*.pyc
 
 # typescript
 *.tsbuildinfo

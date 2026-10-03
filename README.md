@@ -54,3 +54,19 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Estructura del monorepo
+
+Este proyecto incluye, además de la app Expo (carpeta `src/`), los dos microservicios
+propios que consume (cada uno con su propio `README.md` con instrucciones de despliegue):
+
+```
+POKEAPI/
+├── src/                    ← app Expo (front)
+├── backend-poke-cloud/     ← microservicio Node/Express + PostgreSQL (Neon) + Swagger
+└── backend-anime-cloud/    ← microservicio Python/FastAPI + MongoDB (Atlas) + Swagger
+```
+
+Cada backend trae su propio `render.yaml` para desplegarse directo en Render usando
+`rootDir`, así los tres proyectos viven en el mismo repositorio pero se despliegan por
+separado.

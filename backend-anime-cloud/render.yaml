@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: anime-service
+    runtime: python
+    plan: free
+    rootDir: backend-anime-cloud
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: MONGO_URI
+        sync: false # pegar aquí el connection string de MongoDB Atlas (nunca en git)
