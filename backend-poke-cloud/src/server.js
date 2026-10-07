@@ -1,167 +1,125 @@
-const express = require('express');
+require('dotenv').config();
+
+const path = require('node:path');
 const cors = require('cors');
-const swaggerUi = require('swagger-ui-express');
+const express = require('express');
 const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 const pool = require('./db');
-const asegurarProfesores = require('./profesoresIniciales');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
-// Definición de OpenAPI para Swagger UI
 const swaggerSpec = swaggerJsDoc({
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Microservicio Neon PostgreSQL + Swagger',
+      title: 'Microservicio de Pokémon',
       version: '1.0.0',
-      description: 'API de Pokémon y profesores con Neon PostgreSQL como fuente de consulta.'
+      description: 'API REST de Pokémon respaldada por PostgreSQL en Neon.',
     },
-    servers: [{ url: '/' }]
+    servers: [{ url: '/' }],
   },
-  apis: ['./src/server.js']
+  apis: [path.join(__dirname, 'server.js').split(path.sep).join('/')],
 });
 
-// Ruta de Swagger UI
+app.get('/', (req, res) => {
+  res.json({ servicio: 'pokemon-service', documentacion: '/docs', salud: '/health' });
+});
+
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1 FROM public.pokemons LIMIT 1');
+    return res.json({ status: 'ok', database: 'connected' });
+  } catch (error) {
+    console.error('Health check de PostgreSQL fallido:', error);
+    return res.status(503).json({ status: 'error', database: 'unavailable' });
+  }
+});
+
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Health check (usado por el render.yaml para saber si el servicio está vivo)
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
-
 /**
- * @swagger
+ * @openapi
  * /api/pokemons:
  *   get:
- *     summary: Obtiene todos los pokemones guardados en Neon
+ *     summary: Lista todos los Pokémon almacenados en Neon
+ *     tags: [Pokémon]
  *     responses:
  *       200:
- *         description: Lista devuelta exitosamente
+ *         description: Lista de Pokémon
  */
 app.get('/api/pokemons', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM pokemons ORDER BY poke_id ASC');
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const resultado = await pool.query('SELECT * FROM public.pokemons ORDER BY poke_id ASC');
+    return res.json(resultado.rows);
+  } catch (error) {
+    console.error('No se pudieron consultar los Pokémon:', error);
+    return res.status(500).json({ error: 'No se pudieron consultar los Pokémon.' });
   }
 });
 
 /**
- * @swagger
- * /api/pokemons/{name}:
+ * @openapi
+ * /api/pokemons/{consulta}:
  *   get:
- *     summary: Busca un pokemon por nombre en Neon DB
+ *     summary: Busca un Pokémon por número o nombre en Neon
+ *     tags: [Pokémon]
  *     parameters:
  *       - in: path
- *         name: name
+ *         name: consulta
  *         required: true
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Pokemon encontrado
+ *         description: Pokémon encontrado
  *       404:
- *         description: No encontrado
+ *         description: Pokémon no encontrado
  */
-app.get('/api/pokemons/:name', async (req, res) => {
-  try {
-    const { name } = req.params;
-    const esNumero = /^\d+$/.test(name);
-    const valor = esNumero ? Number(name) : name;
-    if (esNumero && !Number.isSafeInteger(valor)) {
-      return res.status(404).json({ message: 'Pokémon no encontrado en la BD' });
-    }
+app.get('/api/pokemons/:consulta', async (req, res) => {
+  const { consulta } = req.params;
+  const esNumero = /^\d+$/.test(consulta);
 
-    const consulta = esNumero
-      ? 'SELECT * FROM pokemons WHERE poke_id = $1'
-      : 'SELECT * FROM pokemons WHERE LOWER(name) = LOWER($1)';
-    const result = await pool.query(consulta, [valor]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Pokémon no encontrado en la BD' });
+  try {
+    const resultado = esNumero
+      ? await pool.query('SELECT * FROM public.pokemons WHERE poke_id = $1', [Number(consulta)])
+      : await pool.query('SELECT * FROM public.pokemons WHERE LOWER(name) = LOWER($1)', [consulta]);
+    if (!resultado.rowCount) {
+      return res.status(404).json({ message: 'Pokémon no encontrado en la base de datos.' });
     }
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.json(adaptarPokemon(resultado.rows[0]));
+  } catch (error) {
+    console.error('No se pudo consultar el Pokémon:', error);
+    return res.status(500).json({ error: 'No se pudo consultar el Pokémon.' });
   }
 });
 
-/**
- * @swagger
- * /api/profesores:
- *   get:
- *     summary: Obtiene todos los profesores guardados en Neon
- *     responses:
- *       200:
- *         description: Lista devuelta exitosamente
- */
-app.get('/api/profesores', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM profesores ORDER BY id ASC');
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+app.use((error, req, res, next) => {
+  if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+    return res.status(400).json({ error: 'El cuerpo de la solicitud no contiene JSON válido.' });
   }
+  console.error('Error inesperado en la solicitud:', error);
+  return res.status(500).json({ error: 'Error interno del servidor.' });
 });
-
-/**
- * @swagger
- * /api/profesores/{id}:
- *   get:
- *     summary: Obtiene un profesor por id
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Profesor encontrado
- *       404:
- *         description: No encontrado
- */
-app.get('/api/profesores/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await pool.query('SELECT * FROM profesores WHERE id = $1', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Profesor no encontrado' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-const PORT = process.env.PORT || 3000;
 
 async function iniciarServidor() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS pokemons (
-      id SERIAL PRIMARY KEY,
-      poke_id INT UNIQUE NOT NULL,
-      name VARCHAR(50) NOT NULL,
-      type VARCHAR(100) NOT NULL,
-      altura NUMERIC(5, 2),
-      peso NUMERIC(5, 2),
-      habilidad VARCHAR(100),
-      image_url TEXT,
-      imagen_shiny TEXT,
-      imagen_trasera TEXT,
-      movimientos TEXT[],
-      descripcion TEXT
-    );
-  `);
-
-  app.listen(PORT, async () => {
-    console.log(`Servidor escuchando en el puerto ${PORT}`);
-    console.log('Búsquedas de Pokémon consultan únicamente Neon PostgreSQL.');
-    console.log('Documentación Swagger disponible en /docs');
-    await asegurarProfesores();
+  const port = Number(process.env.PORT) || 3000;
+  const server = app.listen(port, () => {
+    console.log(`Microservicio de Pokémon escuchando en el puerto ${port}.`);
+    console.log(`Swagger disponible en http://localhost:${port}/docs`);
   });
+
+  const cerrarServidor = () => {
+    server.close(async () => {
+      await pool.end();
+      process.exit(0);
+    });
+  };
+
+  process.once('SIGINT', cerrarServidor);
+  process.once('SIGTERM', cerrarServidor);
 }
 
 iniciarServidor().catch(async (error) => {

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: anime-service
+    name: jjk-service
     runtime: python
     plan: free
     rootDir: backend-anime-cloud
@@ -8,5 +8,7 @@ services:
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
-      - key: MONGO_URI
-        sync: false # pegar aquí el connection string de MongoDB Atlas (nunca en git)
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.12.8

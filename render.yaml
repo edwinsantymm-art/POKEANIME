@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: pokemon-service
+    runtime: node
+    plan: free
+    rootDir: backend-poke-cloud
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_VERSION
+        value: 20.11.0
+
+  - type: web
+    name: profesores-service
+    runtime: node
+    plan: free
+    rootDir: backend-profe-cloud
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.11.0
+
+  - type: web
+    name: jjk-service
+    runtime: python
+    plan: free
+    rootDir: backend-anime-cloud
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.12.8

@@ -36,6 +36,7 @@ yarn-error.*
 
 # backend-anime-cloud (Python)
 venv/
+.venv/
 __pycache__/
 *.pyc
 

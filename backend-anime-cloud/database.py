@@ -1,19 +1,15 @@
 import os
-from pymongo import MongoClient
-from pymongo.errors import ConfigurationError
+
+import psycopg
 from dotenv import load_dotenv
+from psycopg.rows import dict_row
 
 load_dotenv()
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("Falta configurar la variable DATABASE_URL.")
 
-cliente = MongoClient(MONGO_URI)
 
-try:
-    db = cliente.get_default_database()
-    if db is None:
-        raise ConfigurationError("sin base de datos por defecto en la URI")
-except ConfigurationError:
-    db = cliente["anime_db"]
-
-coleccion_personajes = db["personajes"]
+def conectar():
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)

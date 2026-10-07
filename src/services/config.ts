@@ -1,5 +1,22 @@
-// config.ts
+function normalizarUrl(url: string): string {
+  return url.replace(/\/+$/, '');
+}
 
-// Si estás probando localmente en celular/emulador, usa la IP local de tu máquina (ej. 192.168.1.X)
-// Si está desplegado, usa la URL de Render (ej. https://tu-pokemon-service.onrender.com/api)
-export const POKEMON_SERVICE_URL = 'http://172.16.2.215:3000/api';
+export const POKEMON_SERVICE_URL = normalizarUrl(
+  process.env.EXPO_PUBLIC_POKEMON_API_URL ?? '',
+);
+
+export const PROFESORES_SERVICE_URL = normalizarUrl(
+  process.env.EXPO_PUBLIC_PROFESORES_API_URL ?? '',
+);
+
+export const JJK_SERVICE_URL = normalizarUrl(
+  process.env.EXPO_PUBLIC_JJK_API_URL ?? '',
+);
+
+export function validarUrlServicio(url: string, variable: string): string {
+  if (!url) {
+    throw new Error(`Configura ${variable} con la URL pública del microservicio.`);
+  }
+  return url;
+}

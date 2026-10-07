@@ -1,5 +1,5 @@
 // src/services/pokeApi.ts
-import { POKEMON_SERVICE_URL } from './config'; // URL de tu microservicio backend
+import { POKEMON_SERVICE_URL, validarUrlServicio } from './config';
 
 export type PokedexData = {
   id: number;
@@ -26,10 +26,10 @@ function normalizarConsulta(consulta: string): string {
 
 export async function consultarPokemon(consulta: string): Promise<PokedexData> {
   const valor = normalizarConsulta(consulta);
+  const serviceUrl = validarUrlServicio(POKEMON_SERVICE_URL, 'EXPO_PUBLIC_POKEMON_API_URL');
 
   try {
-    // Consulta a tu propio microservicio
-    const respuesta = await fetch(`${POKEMON_SERVICE_URL}/pokemons/${valor}`);
+    const respuesta = await fetch(`${serviceUrl}/pokemons/${encodeURIComponent(valor)}`);
 
     if (respuesta.status === 404) {
       throw new Error('Pokémon no encontrado');
@@ -67,7 +67,8 @@ export async function consultarPokemon(consulta: string): Promise<PokedexData> {
 // Función adicional para obtener la lista completa cargada en la BD
 export async function obtenerTodosPokemons(): Promise<PokedexData[]> {
   try {
-    const respuesta = await fetch(`${POKEMON_SERVICE_URL}/pokemons`);
+    const serviceUrl = validarUrlServicio(POKEMON_SERVICE_URL, 'EXPO_PUBLIC_POKEMON_API_URL');
+    const respuesta = await fetch(`${serviceUrl}/pokemons`);
     if (!respuesta.ok) throw new Error('Error al obtener la lista de Pokémons');
     
     const lista = await respuesta.json();

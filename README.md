@@ -1,72 +1,62 @@
-# Welcome to your Expo app 👋
+# POKEAPI
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación móvil Expo/React Native que consulta tres microservicios desplegables en Render. Los servicios de docentes, Pokémon y Jujutsu Kaisen guardan sus datos en tablas separadas de una misma base PostgreSQL de Neon.
 
-## Get started
+## Servicios
 
-1. Install dependencies
+| Servicio | Tabla en Neon | API | Swagger |
+| --- | --- | --- | --- |
+| Pokémon | `pokemons` | `/api/pokemons`, `/api/pokemons/{nombre-o-numero}` | `/docs` |
+| Docentes | `profesores` | `/api/profesores`, `/api/profesores/{id}` | `/docs` |
+| Jujutsu Kaisen | `personajes_anime` | `/api/personajes`, `/api/personajes/buscar?consulta=...` | `/docs` |
+
+El servicio de docentes implementa GET, POST, PUT y DELETE. La pantalla **Profesores** permite listar, consultar por ID o nombre, crear, editar y eliminar docentes.
+
+## Configuración local
+
+1. Rota la contraseña de Neon si el connection string se compartió fuera de un gestor de secretos. No guardes la cadena real en el repositorio ni en la app.
+2. Configura la misma variable `DATABASE_URL` (con SSL habilitado) en el entorno de cada backend. Para desarrollo local, copia `backend-poke-cloud/.env.example`, `backend-profe-cloud/.env.example` y `backend-anime-cloud/.env.example` a `.env` en sus respectivas carpetas y usa el connection string desde tu gestor local.
+3. Instala las dependencias y arranca cada servicio en su propia terminal:
+
+   ```bash
+   cd backend-poke-cloud
+   npm install
+   npm start
+   ```
+
+   ```bash
+   cd backend-profe-cloud
+   npm install
+   npm start
+   ```
+
+   ```bash
+   cd backend-anime-cloud
+   python -m venv .venv
+   .venv\Scripts\activate
+   pip install -r requirements.txt
+   python seed.py
+   uvicorn main:app --reload --port 4100
+   ```
+
+   Los servicios validan las tablas existentes (`pokemons`, `profesores` y `personajes_anime`); no crean tablas alternativas ni cargan datos de demostración al iniciar.
+
+4. Copia `.env.example` a `.env` en la raíz de la app y reemplaza las tres URLs de ejemplo por las URLs públicas asignadas a los servicios en Render. Para probar localmente en un teléfono, usa la IP local de tu computadora; el teléfono y la computadora deben estar en la misma red.
+5. Arranca la app desde la raíz:
 
    ```bash
    npm install
-   ```
-
-2. Start the app
-
-   ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Despliegue en Render
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+El `render.yaml` de la raíz define los tres servicios para desplegarlos juntos como Blueprint:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. Conecta el repositorio en Render y crea un Blueprint a partir del archivo `render.yaml`. Asegúrate de desplegar un commit que incluya la configuración corregida; el registro compartido muestra dependencias antiguas (`pymongo`) que ya no están en `backend-anime-cloud/requirements.txt`.
+2. En cada servicio, establece `DATABASE_URL` en el panel de Render con la conexión de Neon (no la agregues al archivo YAML ni al cliente móvil).
+3. Espera que los tres health checks respondan con estado `ok`. Las URLs de documentación quedan disponibles en `<URL-del-servicio>/docs`.
+4. Confirma que cada servicio pase su health check. Los health checks confirman conexión y existencia de la tabla que usa el servicio.
+5. Reemplaza las URLs de ejemplo en `.env` por las URLs HTTPS que Render asignó a los servicios, con `/api` al final. Reinicia Expo después de cambiar la configuración.
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-
-## Estructura del monorepo
-
-Este proyecto incluye, además de la app Expo (carpeta `src/`), los dos microservicios
-propios que consume (cada uno con su propio `README.md` con instrucciones de despliegue):
-
-```
-POKEAPI/
-├── src/                    ← app Expo (front)
-├── backend-poke-cloud/     ← microservicio Node/Express + PostgreSQL (Neon) + Swagger
-└── backend-anime-cloud/    ← microservicio Python/FastAPI + MongoDB (Atlas) + Swagger
-```
-
-Cada backend trae su propio `render.yaml` para desplegarse directo en Render usando
-`rootDir`, así los tres proyectos viven en el mismo repositorio pero se despliegan por
-separado.
+No se puede completar el despliegue remoto ni registrar las URLs públicas desde este workspace: hace falta acceso al proyecto de Render y configurar ahí el secreto de Neon.

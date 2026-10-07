@@ -1,41 +1,31 @@
-# Microservicio de profesores
+# Microservicio de docentes
 
-API REST independiente con Node.js, Express, PostgreSQL en Neon y Swagger.
+API REST independiente con Node.js, Express, PostgreSQL en Neon y Swagger. Opera sobre la tabla existente `public.profesores` sin intentar crearla o cambiar su esquema.
 
-## Configuración local
+## Uso local
 
-1. Crea una base PostgreSQL en [Neon](https://neon.tech) y copia su connection string.
-2. Desde esta carpeta, instala dependencias y crea tu archivo local de configuración:
+1. Copia `.env.example` como `.env` y configura `DATABASE_URL`. No compartas ni confirmes ese archivo en Git.
+2. Desde esta carpeta instala dependencias e inicia:
 
    ```bash
    npm install
-   cp .env.example .env
-   ```
-
-3. Asigna el connection string de Neon a `DATABASE_URL` en `.env` y ejecuta:
-
-   ```bash
    npm start
    ```
 
-La tabla `profesores` se crea automáticamente al iniciar. Para cargar dos registros de demostración, ejecuta el contenido de `sql/seed.sql` desde el SQL Editor de Neon. El seed solo agrega datos cuando la tabla está vacía.
+Swagger está en `http://localhost:3001/docs` y la comprobación de servicio/base de datos en `http://localhost:3001/health`.
 
-La API queda disponible en `http://localhost:3001/api/profesores`, Swagger en `http://localhost:3001/docs` y el health check en `http://localhost:3001/health`.
-
-## Endpoints
+## API
 
 | Método | Ruta | Descripción |
 | --- | --- | --- |
-| GET | `/api/profesores` | Lista todos los profesores |
-| GET | `/api/profesores/:id` | Obtiene un profesor |
-| POST | `/api/profesores` | Crea un profesor |
-| PUT | `/api/profesores/:id` | Reemplaza sus datos |
-| DELETE | `/api/profesores/:id` | Elimina un profesor |
+| GET | `/api/profesores` | Lista docentes |
+| GET | `/api/profesores/{id}` | Consulta un docente |
+| POST | `/api/profesores` | Crea un docente |
+| PUT | `/api/profesores/{id}` | Actualiza un docente |
+| DELETE | `/api/profesores/{id}` | Elimina un docente |
 
-El cuerpo de creación y actualización usa `nombre` y `profesion` como campos obligatorios. `imagen` puede ser texto o `null`, y `habilidades` una lista de textos.
+`nombre` y `profesion` son obligatorios. `universidad`, `imagen` y `habilidades` son opcionales.
 
-## Despliegue en Render
+## Render
 
-El archivo `render.yaml` configura el servicio para desplegar desde la raíz del repositorio. En Render, configura `DATABASE_URL` con el connection string de Neon; no subas el archivo `.env` ni credenciales al repositorio. Render crea la tabla en el arranque.
-
-Para consumir el servicio desde la app, configura la URL base con la ruta `/api`, por ejemplo `https://tu-servicio.onrender.com/api`; así, `GET /profesores` apunta a este backend.
+El `render.yaml` de la raíz despliega los tres microservicios como Blueprint. También puedes desplegar solo este directorio con el manifiesto local. En Render, configura `DATABASE_URL` como variable secreta con la conexión de Neon.

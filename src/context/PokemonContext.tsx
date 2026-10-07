@@ -17,7 +17,7 @@ const POKEMON_INICIAL = 'mew';
 
 export function PokemonProvider({ children }: { children: React.ReactNode }) {
   const [pokemon, setPokemon] = useState<PokedexData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchText, setSearchText] = useState('');
 
@@ -42,10 +42,26 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Al iniciar la app, carga Mew (#151) automáticamente desde el microservicio
   useEffect(() => {
-    fetchPokemon(POKEMON_INICIAL);
-  }, [fetchPokemon]);
+    let activa = true;
+    consultarPokemon(POKEMON_INICIAL)
+      .then((datos) => {
+        if (activa) setPokemon(datos);
+      })
+      .catch((err: unknown) => {
+        if (activa) {
+          setPokemon(null);
+          setError(err instanceof Error ? err.message : 'Pokémon no encontrado');
+        }
+      })
+      .finally(() => {
+        if (activa) setLoading(false);
+      });
+
+    return () => {
+      activa = false;
+    };
+  }, []);
 
   const handleSearch = useCallback(() => {
     fetchPokemon(searchText || POKEMON_INICIAL);

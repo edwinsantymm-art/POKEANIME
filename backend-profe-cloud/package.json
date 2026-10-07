@@ -17,7 +17,6 @@
     "dotenv": "^16.4.5",
     "express": "^4.22.3",
     "pg": "^8.23.1",
-    "pokeapi": "file:..",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1"
   }

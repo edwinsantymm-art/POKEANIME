@@ -54,7 +54,7 @@ function responderError(res, error, mensaje) {
 async function listar(req, res) {
   try {
     const resultado = await pool.query(
-      'SELECT id, nombre, profesion, imagen, habilidades FROM profesores ORDER BY id ASC',
+      'SELECT id, nombre, profesion, imagen, habilidades FROM public.profesores ORDER BY id ASC',
     );
     return res.json(resultado.rows);
   } catch (error) {
@@ -68,7 +68,7 @@ async function obtenerPorId(req, res) {
 
   try {
     const resultado = await pool.query(
-      'SELECT id, nombre, profesion, imagen, habilidades FROM profesores WHERE id = $1',
+      'SELECT id, nombre, profesion, imagen, habilidades FROM public.profesores WHERE id = $1',
       [id],
     );
     if (resultado.rowCount === 0) return res.status(404).json({ error: 'Profesor no encontrado.' });
@@ -85,7 +85,7 @@ async function crear(req, res) {
   const profesor = normalizarProfesor(req.body);
   try {
     const resultado = await pool.query(
-      `INSERT INTO profesores (nombre, profesion, imagen, habilidades)
+      `INSERT INTO public.profesores (nombre, profesion, imagen, habilidades)
        VALUES ($1, $2, $3, $4)
        RETURNING id, nombre, profesion, imagen, habilidades`,
       [profesor.nombre, profesor.profesion, profesor.imagen, profesor.habilidades],

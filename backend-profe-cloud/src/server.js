@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-const fs = require('node:fs');
 const path = require('node:path');
 const cors = require('cors');
 const express = require('express');
@@ -32,7 +31,7 @@ app.get('/', (req, res) => {
 
 app.get('/health', async (req, res) => {
   try {
-    await pool.query('SELECT 1');
+    await pool.query('SELECT 1 FROM public.profesores LIMIT 1');
     return res.json({ status: 'ok', database: 'connected' });
   } catch (error) {
     console.error('Health check de PostgreSQL fallido:', error);
@@ -52,9 +51,6 @@ app.use((error, req, res, next) => {
 });
 
 async function iniciarServidor() {
-  const schema = fs.readFileSync(path.join(__dirname, '..', 'sql', 'schema.sql'), 'utf8');
-  await pool.query(schema);
-
   const port = Number(process.env.PORT) || 3001;
   const server = app.listen(port, () => {
     console.log(`Microservicio de profesores escuchando en el puerto ${port}.`);
