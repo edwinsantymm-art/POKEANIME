@@ -4,6 +4,7 @@ import json
 import psycopg
 from fastapi import FastAPI, HTTPException, Query
 from psycopg import sql
+from fastapi.middleware.cors import CORSMiddleware
 
 from database import conectar
 from models import PersonajeRespuesta
@@ -40,6 +41,12 @@ app = FastAPI(
     description="Búsqueda de personajes en la tabla existente public.personajes_anime de Neon.",
     version="2.1.0",
     lifespan=lifespan,
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 
