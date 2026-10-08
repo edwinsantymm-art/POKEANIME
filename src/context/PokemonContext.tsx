@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { consultarPokemon, PokedexData } from '@/services/pokeApi';
 
 type PokemonContextValue = {
@@ -20,11 +20,14 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchText, setSearchText] = useState('');
+  const requestId = useRef(0);
 
   const fetchPokemon = useCallback(async (consulta: string) => {
+    const currentRequestId = ++requestId.current;
     const valor = consulta.trim();
     if (!valor) {
       setError('Escribe el nombre o número del Pokémon.');
+      setLoading(false);
       return;
     }
 
@@ -33,38 +36,46 @@ export function PokemonProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const datos = await consultarPokemon(valor);
+      if (currentRequestId !== requestId.current) return;
       setPokemon(datos);
     } catch (err) {
+      if (currentRequestId !== requestId.current) return;
       setPokemon(null);
       setError(err instanceof Error ? err.message : 'Pokémon no encontrado');
     } finally {
-      setLoading(false);
+      if (currentRequestId === requestId.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    let activa = true;
+    const currentRequestId = ++requestId.current;
     consultarPokemon(POKEMON_INICIAL)
       .then((datos) => {
-        if (activa) setPokemon(datos);
+        if (currentRequestId === requestId.current) {
+          setPokemon(datos);
+        }
       })
       .catch((err: unknown) => {
-        if (activa) {
+        if (currentRequestId === requestId.current) {
           setPokemon(null);
           setError(err instanceof Error ? err.message : 'Pokémon no encontrado');
         }
       })
       .finally(() => {
-        if (activa) setLoading(false);
+        if (currentRequestId === requestId.current) {
+          setLoading(false);
+        }
       });
 
     return () => {
-      activa = false;
+      requestId.current += 1;
     };
   }, []);
 
   const handleSearch = useCallback(() => {
-    fetchPokemon(searchText || POKEMON_INICIAL);
+    fetchPokemon(searchText.trim() || POKEMON_INICIAL);
   }, [fetchPokemon, searchText]);
 
   const handleClear = useCallback(() => {

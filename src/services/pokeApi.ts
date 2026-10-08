@@ -15,6 +15,15 @@ export type PokedexData = {
   descripcion: string;
 };
 
+const TIEMPO_LIMITE_BUSQUEDA_MS = 60_000;
+
+class ErrorApiPokemon extends Error {}
+
+function obtenerApiUrl(): string {
+  const serviceUrl = validarUrlServicio(POKEMON_SERVICE_URL, 'EXPO_PUBLIC_POKEMON_API_URL');
+  return serviceUrl.endsWith('/api') ? serviceUrl : `${serviceUrl}/api`;
+}
+
 // Normaliza la consulta: minúsculas, sin espacios, elimina ceros a la izquierda si es número
 function normalizarConsulta(consulta: string): string {
   const valor = consulta.trim().toLowerCase();
@@ -26,16 +35,25 @@ function normalizarConsulta(consulta: string): string {
 
 export async function consultarPokemon(consulta: string): Promise<PokedexData> {
   const valor = normalizarConsulta(consulta);
-  const serviceUrl = validarUrlServicio(POKEMON_SERVICE_URL, 'EXPO_PUBLIC_POKEMON_API_URL');
+  const apiUrl = obtenerApiUrl();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIEMPO_LIMITE_BUSQUEDA_MS);
 
   try {
-    const respuesta = await fetch(`${serviceUrl}/pokemons/${encodeURIComponent(valor)}`);
+    const respuesta = await fetch(
+      `${apiUrl}/pokemons/${encodeURIComponent(valor)}`,
+      { signal: controller.signal },
+    );
 
     if (respuesta.status === 404) {
-      throw new Error('Pokémon no encontrado');
+      throw new ErrorApiPokemon('Pokémon no encontrado en la base de datos.');
     }
     if (!respuesta.ok) {
-      throw new Error('No se pudo conectar con el microservicio backend.');
+      const mensaje =
+        respuesta.status === 503
+          ? 'El servicio de Pokémon no está disponible. Revisa que esté activo en Render e inténtalo de nuevo.'
+          : `El servicio de Pokémon respondió con el error ${respuesta.status}.`;
+      throw new ErrorApiPokemon(mensaje);
     }
 
     const data = await respuesta.json();
@@ -57,18 +75,25 @@ export async function consultarPokemon(consulta: string): Promise<PokedexData> {
       descripcion: data.descripcion ?? 'Sin descripción disponible',
     };
   } catch (error) {
-    if (error instanceof Error && error.message === 'Pokémon no encontrado') {
+    if (error instanceof ErrorApiPokemon) {
       throw error;
     }
-    throw new Error('No se pudo conectar con el servicio backend.');
+    if (controller.signal.aborted) {
+      throw new ErrorApiPokemon(
+        'La búsqueda tardó más de un minuto. El servicio puede estar iniciando o no responder; vuelve a intentarlo.',
+      );
+    }
+    throw new ErrorApiPokemon('No se pudo conectar con el servicio de Pokémon.');
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
 // Función adicional para obtener la lista completa cargada en la BD
 export async function obtenerTodosPokemons(): Promise<PokedexData[]> {
   try {
-    const serviceUrl = validarUrlServicio(POKEMON_SERVICE_URL, 'EXPO_PUBLIC_POKEMON_API_URL');
-    const respuesta = await fetch(`${serviceUrl}/pokemons`);
+    const apiUrl = obtenerApiUrl();
+    const respuesta = await fetch(`${apiUrl}/pokemons`);
     if (!respuesta.ok) throw new Error('Error al obtener la lista de Pokémons');
     
     const lista = await respuesta.json();
