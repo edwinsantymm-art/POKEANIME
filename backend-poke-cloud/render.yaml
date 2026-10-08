@@ -10,5 +10,7 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false # pegar aquí el connection string de Neon (nunca en git)
+      - key: NODE_ENV
+        value: production
       - key: NODE_VERSION
         value: 20.11.0
