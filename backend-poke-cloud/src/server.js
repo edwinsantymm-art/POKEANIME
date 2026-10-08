@@ -24,6 +24,26 @@ const swaggerSpec = swaggerJsDoc({
   apis: [path.join(__dirname, 'server.js').split(path.sep).join('/')],
 });
 
+function adaptarPokemon(row) {
+  const tipo = Array.isArray(row.type)
+    ? row.type.join('/')
+    : row.type ?? row.tipos?.join('/') ?? 'desconocido';
+
+  return {
+    poke_id: row.poke_id ?? row.id,
+    name: row.name ?? row.nombre,
+    type: tipo,
+    altura: Number(row.altura ?? row.height ?? 0),
+    peso: Number(row.peso ?? row.weight ?? 0),
+    habilidad: row.habilidad ?? row.ability ?? '—',
+    image_url: row.image_url ?? row.imagen ?? row.imagenPrincipal ?? null,
+    imagen_shiny: row.imagen_shiny ?? row.imagenShiny ?? null,
+    imagen_trasera: row.imagen_trasera ?? row.imagenTrasera ?? null,
+    movimientos: row.movimientos ?? row.moves ?? [],
+    descripcion: row.descripcion ?? row.description ?? 'Sin descripción disponible',
+  };
+}
+
 app.get('/', (req, res) => {
   res.json({ servicio: 'pokemon-service', documentacion: '/docs', salud: '/health' });
 });

@@ -30,18 +30,17 @@ El servicio de docentes implementa GET, POST, PUT y DELETE. La pantalla **Profes
    npm start
    ```
 
-   ```bash
+   ```powershell
    cd backend-anime-cloud
    python -m venv .venv
    .venv\Scripts\activate
    pip install -r requirements.txt
-   python seed.py
    uvicorn main:app --reload --port 4100
    ```
 
    Los servicios validan las tablas existentes (`pokemons`, `profesores` y `personajes_anime`); no crean tablas alternativas ni cargan datos de demostración al iniciar.
 
-4. Copia `.env.example` a `.env` en la raíz de la app y reemplaza las tres URLs de ejemplo por las URLs públicas asignadas a los servicios en Render. Para probar localmente en un teléfono, usa la IP local de tu computadora; el teléfono y la computadora deben estar en la misma red.
+4. Copia `.env.example` a `.env` en la raíz de la app. Para probar localmente en un teléfono, sustituye las URLs de Render por la IP local de tu computadora; ambos dispositivos deben estar en la misma red.
 5. Arranca la app desde la raíz:
 
    ```bash
