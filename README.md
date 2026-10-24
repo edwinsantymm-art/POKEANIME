@@ -54,7 +54,7 @@ Si un docente pendiente coincide exactamente en nombre, profesión, imagen y hab
    npm start
    ```
 
-   `npm start` inicia Expo Go y el backend de chat en el puerto 4000. También puedes usar `npm run web` para Expo Web. Al iniciar, el comando detecta la IP local de la computadora y la usa para el chat en vez de `localhost`, que no es accesible desde el teléfono. Conecta el teléfono y la computadora a la misma red Wi-Fi, abre el QR con Expo Go y permite Node.js en la red privada de Windows si el firewall lo solicita. Si las redes son distintas, configura `EXPO_PUBLIC_AI_CHAT_API_URL` con la URL pública del backend.
+   `npm start` inicia Expo Go y el backend de chat en el puerto 4000. También puedes usar `npm run web` para Expo Web. Si `EXPO_PUBLIC_AI_CHAT_API_URL` en `.env` usa `localhost`, el comando detecta la IP local de la computadora para que un teléfono en la misma Wi-Fi pueda conectarse; si contiene una URL pública, la conserva. Abre el QR con Expo Go y permite Node.js en la red privada de Windows si el firewall lo solicita.
 
    Antes de iniciar, configura `NEON_DATABASE_URL` y al menos una clave de proveedor (`GEMINI_API_KEY`, `OPENAI_API_KEY` o `DEEPSEEK_API_KEY`) en `backend-ai-chat/.env`. El chat permite elegir entre los proveedores configurados en el backend; las claves nunca se guardan en la app móvil.
 
@@ -64,7 +64,7 @@ El `render.yaml` de la raíz define únicamente `ai-chat-service` para no duplic
 
 1. Conecta el repositorio en Render y crea o sincroniza el Blueprint a partir de `render.yaml` en la rama `master`.
 2. En `ai-chat-service`, configura `NEON_DATABASE_URL` y las claves de IA que quieras habilitar (`GEMINI_API_KEY`, `OPENAI_API_KEY` y/o `DEEPSEEK_API_KEY`) como secretos; no agregues credenciales al YAML ni al cliente móvil.
-3. Espera que el health check de `ai-chat-service` responda con estado `ok`. El servicio valida conexión a Neon y acceso a las tablas `pokemons` y `personajes_anime`.
+3. Render comprueba que el proceso responde en `/health`. Para validar que las variables, Neon y sus tablas están listas, consulta `/ready`; configura las credenciales faltantes si no responde con estado `ok`.
 4. Reemplaza `EXPO_PUBLIC_AI_CHAT_API_URL` en `.env` con la URL HTTPS del backend más `/api` al final y reinicia Expo.
 
 Los servicios de Pokémon, docentes y Jujutsu Kaisen existentes permanecen desplegados por separado.

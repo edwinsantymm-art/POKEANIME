@@ -1,4 +1,5 @@
 const { spawn } = require('node:child_process');
+const fs = require('node:fs');
 const http = require('node:http');
 const net = require('node:net');
 const os = require('node:os');
@@ -37,9 +38,29 @@ function obtenerIpLocal() {
   return candidatos[0]?.address;
 }
 
+function obtenerUrlChatConfigurada() {
+  if (process.env.EXPO_PUBLIC_AI_CHAT_API_URL) {
+    return process.env.EXPO_PUBLIC_AI_CHAT_API_URL;
+  }
+
+  const envPath = path.join(root, '.env');
+  if (!fs.existsSync(envPath)) return '';
+
+  const variable = fs.readFileSync(envPath, 'utf8')
+    .split(/\r?\n/)
+    .find((line) => /^\s*(?:export\s+)?EXPO_PUBLIC_AI_CHAT_API_URL\s*=/.test(line));
+  if (!variable) return '';
+
+  const value = variable.slice(variable.indexOf('=') + 1).trim();
+  return value.replace(/^(['"])(.*)\1$/, '$2');
+}
+
 function configurarUrlChatParaDispositivo() {
-  const url = process.env.EXPO_PUBLIC_AI_CHAT_API_URL || '';
-  if (url && !/localhost|127\.0\.0\.1|\[::1\]/i.test(url)) return;
+  const url = obtenerUrlChatConfigurada();
+  if (url && !/localhost|127\.0\.0\.1|\[::1\]/i.test(url)) {
+    process.env.EXPO_PUBLIC_AI_CHAT_API_URL = url;
+    return;
+  }
 
   const ip = obtenerIpLocal();
   if (!ip) {

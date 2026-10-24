@@ -499,7 +499,11 @@ async function consultarDatos() {
   };
 }
 
-app.get('/health', async (_req, res) => {
+app.get('/health', (_req, res) => {
+  return res.json({ status: 'ok' });
+});
+
+app.get('/ready', async (_req, res) => {
   const configuredProviders = proveedoresDisponibles();
   if (!sql || !configuredProviders.length) {
     return res.status(503).json({

@@ -12,7 +12,7 @@ Backend Node.js/Express que consulta las tablas existentes `public.pokemons` y `
 
 Desde esta carpeta, copia `.env.example` a `.env` y completa `NEON_DATABASE_URL` y la(s) clave(s) de los proveedores que quieras habilitar. Configura `GEMINI_API_KEY` (modelo por defecto `gemini-3.5-flash-lite`), `OPENAI_API_KEY` (modelo por defecto `gpt-4o-mini`) o `DEEPSEEK_API_KEY` (modelo por defecto `deepseek-chat`). Las variables `*_MODEL` permiten elegir otro modelo compatible. El endpoint `/api/providers` muestra los tres proveedores y señala cuáles están configurados para que la app informe cuáles requieren clave. Guarda las claves únicamente en el entorno del servidor; no las incluyas en la app Expo ni las confirmes en Git. El usuario de Neon configurado en `NEON_DATABASE_URL` necesita permiso `SELECT` sobre `public.pokemons` y `public.personajes_anime`.
 
-Si `/health` indica que falta permiso de lectura, ejecuta en el SQL Editor de Neon con un usuario propietario/administrador (ajusta el rol si el usuario de la URL no es `authenticator`):
+Si `/ready` indica que falta permiso de lectura, ejecuta en el SQL Editor de Neon con un usuario propietario/administrador (ajusta el rol si el usuario de la URL no es `authenticator`):
 
 ```sql
 GRANT USAGE ON SCHEMA public TO authenticator;
@@ -28,7 +28,7 @@ npm install
 npm run dev
 ```
 
-Para iniciar Expo Go y este backend juntos, ejecuta `npm start` desde la raíz; usa `npm run web` para Expo Web. El comando de inicio configura automáticamente la IP local del backend para que un teléfono en la misma red Wi-Fi pueda conectarse. Para iniciar solo el backend, usa los comandos anteriores desde esta carpeta. El API escucha en el puerto 4000 en las interfaces de red disponibles. Comprueba `/health`; el endpoint de preguntas es `POST /api/chat`:
+Para iniciar Expo Go y este backend juntos, ejecuta `npm start` desde la raíz; usa `npm run web` para Expo Web. El comando de inicio configura automáticamente la IP local del backend para que un teléfono en la misma red Wi-Fi pueda conectarse. Para iniciar solo el backend, usa los comandos anteriores desde esta carpeta. El API escucha en el puerto 4000 en las interfaces de red disponibles. `/health` verifica que el proceso esté respondiendo; `/ready` verifica las variables, la conexión con Neon y el acceso a las tablas. El endpoint de preguntas es `POST /api/chat`:
 
 ```json
 { "question": "¿Qué tipo es Pikachu?", "aiService": "gemini" }
@@ -46,7 +46,7 @@ En el `.env` de la raíz, configura `EXPO_PUBLIC_AI_CHAT_API_URL` con la URL pú
 
 ## Despliegue
 
-El `render.yaml` de la raíz define `ai-chat-service`. Configura `NEON_DATABASE_URL` y las API keys de los proveedores que desees habilitar (`GEMINI_API_KEY`, `OPENAI_API_KEY` y/o `DEEPSEEK_API_KEY`) como secretos en Render. Puedes configurar opcionalmente las variables de modelo correspondientes. La URL base del servicio más `/api` se usa como `EXPO_PUBLIC_AI_CHAT_API_URL` en Expo.
+El `render.yaml` de la raíz define `ai-chat-service`. Configura `NEON_DATABASE_URL` y las API keys de los proveedores que desees habilitar (`GEMINI_API_KEY`, `OPENAI_API_KEY` y/o `DEEPSEEK_API_KEY`) como secretos en Render. Puedes configurar opcionalmente las variables de modelo correspondientes. Render usa `/health` para comprobar que el proceso responde; `/ready` comprueba la disponibilidad de Neon y al menos un proveedor de IA. La URL base del servicio más `/api` se usa como `EXPO_PUBLIC_AI_CHAT_API_URL` en Expo.
 
 ## Tablas existentes y fuentes de respuesta
 
