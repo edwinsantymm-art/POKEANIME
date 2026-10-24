@@ -60,12 +60,11 @@ Si un docente pendiente coincide exactamente en nombre, profesión, imagen y hab
 
 ## Despliegue en Render
 
-El `render.yaml` de la raíz define los cuatro servicios para desplegarlos juntos como Blueprint:
+El `render.yaml` de la raíz define únicamente `ai-chat-service` para no duplicar los servicios existentes de Pokémon, docentes y Jujutsu Kaisen:
 
-1. Conecta el repositorio en Render y crea un Blueprint a partir del archivo `render.yaml`. Asegúrate de desplegar un commit que incluya la configuración corregida; el registro compartido muestra dependencias antiguas (`pymongo`) que ya no están en `backend-anime-cloud/requirements.txt`.
-2. En los servicios de Pokémon, docentes y Jujutsu Kaisen, establece `DATABASE_URL` en el panel de Render. En `ai-chat-service`, establece `NEON_DATABASE_URL` y las claves de IA que quieras habilitar (`GEMINI_API_KEY`, `OPENAI_API_KEY` y/o `DEEPSEEK_API_KEY`) como secretos; no agregues credenciales al YAML ni al cliente móvil.
-3. Espera que los cuatro health checks respondan con estado `ok`. Las URLs de documentación quedan disponibles en `<URL-del-servicio>/docs`.
-4. Confirma que cada servicio pase su health check. El chat también valida acceso a las tablas `pokemons` y `personajes_anime` y que tenga configurada al menos una API key de IA.
-5. Reemplaza las URLs de ejemplo en `.env` por las URLs HTTPS que Render asignó a los servicios, con `/api` al final, incluida `EXPO_PUBLIC_AI_CHAT_API_URL`. Reinicia Expo después de cambiar la configuración.
+1. Conecta el repositorio en Render y crea o sincroniza el Blueprint a partir de `render.yaml` en la rama `master`.
+2. En `ai-chat-service`, configura `NEON_DATABASE_URL` y las claves de IA que quieras habilitar (`GEMINI_API_KEY`, `OPENAI_API_KEY` y/o `DEEPSEEK_API_KEY`) como secretos; no agregues credenciales al YAML ni al cliente móvil.
+3. Espera que el health check de `ai-chat-service` responda con estado `ok`. El servicio valida conexión a Neon y acceso a las tablas `pokemons` y `personajes_anime`.
+4. Reemplaza `EXPO_PUBLIC_AI_CHAT_API_URL` en `.env` con la URL HTTPS del backend más `/api` al final y reinicia Expo.
 
-No se puede completar el despliegue remoto ni registrar las URLs públicas desde este workspace: hace falta acceso al proyecto de Render y configurar ahí el secreto de Neon.
+Los servicios de Pokémon, docentes y Jujutsu Kaisen existentes permanecen desplegados por separado.
