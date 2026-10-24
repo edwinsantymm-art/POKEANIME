@@ -88,6 +88,16 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'IA',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline'} color={color} size={22} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

@@ -14,6 +14,10 @@ export const JJK_SERVICE_URL = normalizarUrl(
   process.env.EXPO_PUBLIC_JJK_API_URL ?? '',
 );
 
+export const AI_CHAT_SERVICE_URL = normalizarUrl(
+  process.env.EXPO_PUBLIC_AI_CHAT_API_URL ?? '',
+);
+
 export function validarUrlServicio(url: string, variable: string): string {
   if (!url) {
     throw new Error(`Configura ${variable} con la URL pública del microservicio.`);
