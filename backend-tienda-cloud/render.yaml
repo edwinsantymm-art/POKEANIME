@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: tienda-autopartes-service
+    runtime: node
+    plan: free
+    rootDir: backend-tienda-cloud
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_TOKEN_SECRET
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.11.0

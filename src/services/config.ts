@@ -10,6 +10,10 @@ export const PROFESORES_SERVICE_URL = normalizarUrl(
   process.env.EXPO_PUBLIC_PROFESORES_API_URL ?? '',
 );
 
+export const TIENDA_SERVICE_URL = normalizarUrl(
+  process.env.EXPO_PUBLIC_TIENDA_API_URL ?? 'http://localhost:4004',
+);
+
 export const JJK_SERVICE_URL = normalizarUrl(
   process.env.EXPO_PUBLIC_JJK_API_URL ?? '',
 );
