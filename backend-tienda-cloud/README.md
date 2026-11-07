@@ -21,7 +21,7 @@ GRANT USAGE ON SCHEMA public TO usuario_app;
 GRANT SELECT ON public.autopartes_productos TO usuario_app;
 GRANT SELECT, INSERT ON public.autopartes_usuarios TO usuario_app;
 GRANT SELECT, INSERT ON public.autopartes_facturas TO usuario_app;
-GRANT INSERT ON public.autopartes_factura_items TO usuario_app;
+GRANT SELECT, INSERT ON public.autopartes_factura_items TO usuario_app;
 GRANT USAGE ON SEQUENCE
   public.autopartes_usuarios_id_seq,
   public.autopartes_facturas_id_seq,
