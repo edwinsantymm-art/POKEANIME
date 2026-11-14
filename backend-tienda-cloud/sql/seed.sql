@@ -1,10 +1,14 @@
-INSERT INTO public.autopartes_productos (id, nombre, categoria, descripcion, precio)
+INSERT INTO public.autopartes_productos
+  (id, nombre, categoria, plataforma, descripcion, precio, stock, image_url)
 VALUES
-  ('bat-001', 'Batería Bosch S4 12V', 'Baterías', 'Batería libre de mantenimiento para automóvil.', 389900.00),
-  ('fre-001', 'Pastillas de freno delanteras Brembo', 'Frenos', 'Juego de pastillas de freno para eje delantero.', 219900.00),
-  ('ace-001', 'Aceite sintético Mobil 1 5W-30 (4 L)', 'Aceites', 'Aceite sintético para motores a gasolina.', 189900.00),
-  ('fil-001', 'Filtro de aceite Mann-Filter', 'Filtros', 'Filtro de aceite para motor con filtración de alta eficiencia.', 35900.00),
-  ('fil-002', 'Filtro de aire Bosch', 'Filtros', 'Filtro de aire para motor de combustión.', 52900.00),
-  ('bat-002', 'Batería Varta Blue Dynamic 12V', 'Baterías', 'Batería de arranque para uso automotriz.', 429900.00),
-  ('ace-002', 'Aceite Castrol GTX 10W-40 (4 L)', 'Aceites', 'Aceite multigrado para vehículos livianos.', 119900.00)
+  ('gs-ps-gowr', 'God of War Ragnarök', 'Acción y aventura', 'PlayStation', 'Edición física para PS5. Kratos y Atreus recorren los nueve reinos mientras afrontan una nueva amenaza nórdica.', 329900.00, 10, 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2322010/header.jpg'),
+  ('gs-ps-spider2', 'Marvel''s Spider-Man 2', 'Acción y aventura', 'PlayStation', 'Edición física para PS5. Peter Parker y Miles Morales protegen una Nueva York ampliada frente a Venom y otros villanos.', 189900.00, 10, 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2651280/header.jpg'),
+  ('gs-ps-gt7', 'Gran Turismo 7', 'Carreras', 'PlayStation', 'Edición física para PS5. Simulador de carreras con una colección de autos y circuitos para competir.', 329900.00, 10, 'https://upload.wikimedia.org/wikipedia/en/1/14/Gran_Turismo_7_cover_art.jpg'),
+  ('gs-xb-forza5', 'Forza Horizon 5', 'Carreras', 'Xbox', 'Edición física para Xbox Series X. Explora México en un mundo abierto con cientos de autos y eventos de carrera.', 380000.00, 10, 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1551360/header.jpg'),
+  ('gs-xb-halo-i', 'Halo Infinite', 'Acción', 'Xbox', 'Edición física para Xbox Series X. La campaña de Master Chief continúa en el anillo Zeta Halo.', 259900.00, 10, 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1240440/header.jpg'),
+  ('gs-xb-starfield', 'Starfield', 'Aventura y rol', 'Xbox', 'Edición física para Xbox Series X. RPG de exploración espacial con misiones y sistemas planetarios.', 199999.00, 10, 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1716740/header.jpg'),
+  ('gs-nt-zelda-totk', 'The Legend of Zelda: Tears of the Kingdom', 'Aventura', 'Nintendo', 'Edición física para Nintendo Switch. Explora Hyrule, sus cielos y sus profundidades usando nuevas habilidades de Link.', 309900.00, 10, 'https://assets.nintendo.com/image/upload/ar_16:9,c_lpad,w_1240/b_white/f_auto/q_auto/store/software/switch/70010000063714/fb30eab428df3fc993b41c76e20f72e4d76d49734d17d31996b5ab61c414b117'),
+  ('gs-nt-mario-wonder', 'Super Mario Bros. Wonder', 'Plataformas', 'Nintendo', 'Edición física para Nintendo Switch. Recorre el Reino Flor y descubre los efectos inesperados de las Flores Maravilla.', 208990.00, 10, 'https://assets.nintendo.com/image/upload/ar_16:9,c_lpad,w_1240/b_white/f_auto/q_auto/store/software/switch/70010000068688/87e8aa5f1fdc950b88eae7d7c62ed185c8a6373c845090bbdb2e2cf039b38da1'),
+  ('gs-nt-mario-kart8', 'Mario Kart 8 Deluxe', 'Carreras', 'Nintendo', 'Edición física para Nintendo Switch. Compite con personajes de Mario en circuitos y modos locales o en línea.', 244900.00, 10, 'https://assets.nintendo.com/image/upload/ar_16:9,c_lpad,w_1240/b_white/f_auto/q_auto/store/software/switch/70010000000153/de697f487a36d802dd9a5ff0341f717c8486221f2f1219b675af37aca63bc453'),
+  ('gs-ps-eldenring', 'Elden Ring', 'Acción y rol', 'PlayStation', 'Edición física para PS5. Explora las Tierras Intermedias, combate enemigos y desarrolla tu personaje en una aventura de rol.', 219900.00, 10, 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg')
 ON CONFLICT (id) DO NOTHING;

@@ -2,8 +2,11 @@ CREATE TABLE IF NOT EXISTS public.autopartes_productos (
   id VARCHAR(30) PRIMARY KEY,
   nombre VARCHAR(160) NOT NULL,
   categoria VARCHAR(60) NOT NULL,
+  plataforma VARCHAR(20) CHECK (plataforma IN ('PlayStation', 'Xbox', 'Nintendo')),
   descripcion VARCHAR(300) NOT NULL DEFAULT '',
+  image_url VARCHAR(1000),
   precio NUMERIC(12, 2) NOT NULL CHECK (precio >= 0),
+  stock INTEGER CHECK (stock IS NULL OR stock >= 0),
   activo BOOLEAN NOT NULL DEFAULT TRUE,
   creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -48,3 +51,9 @@ CREATE INDEX IF NOT EXISTS autopartes_factura_items_factura_id_idx
 
 CREATE INDEX IF NOT EXISTS autopartes_facturas_usuario_id_idx
   ON public.autopartes_facturas (usuario_id);
+
+ALTER TABLE public.autopartes_productos
+  ADD COLUMN IF NOT EXISTS plataforma VARCHAR(20);
+
+ALTER TABLE public.autopartes_productos
+  ADD COLUMN IF NOT EXISTS stock INTEGER;

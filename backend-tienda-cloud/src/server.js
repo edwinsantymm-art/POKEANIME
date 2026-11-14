@@ -111,12 +111,12 @@ function desdeCentavos(valor) {
 }
 
 app.get('/', (req, res) => {
-  return res.json({ servicio: 'tienda-autopartes-service', salud: '/health' });
+  return res.json({ servicio: 'tienda-videojuegos-service', salud: '/health' });
 });
 
 app.get('/health', async (req, res) => {
   try {
-    await pool.query('SELECT 1 FROM public.autopartes_productos LIMIT 1');
+    await pool.query('SELECT image_url FROM public.autopartes_productos LIMIT 1');
     return res.json({ status: 'ok', database: 'connected' });
   } catch (error) {
     console.error('Health check de Neon fallido:', error);
@@ -199,19 +199,22 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Consulta en Neon el catálogo activo de autopartes.
+// Consulta en Neon el catálogo activo de juegos físicos.
 app.get('/api/tienda/productos', exigirSesion, async (req, res) => {
   try {
     const resultado = await pool.query(
-      `SELECT id, nombre, categoria, descripcion, precio
+      `SELECT id, nombre, categoria, plataforma, descripcion, precio, stock, image_url
        FROM public.autopartes_productos
        WHERE activo = TRUE
-       ORDER BY categoria, nombre`,
+         AND plataforma IN ('PlayStation', 'Xbox', 'Nintendo')
+         AND stock IS NOT NULL
+       ORDER BY plataforma, categoria, nombre`,
     );
     return res.json({
       products: resultado.rows.map((producto) => ({
         ...producto,
         precio: Number(producto.precio),
+        stock: Number(producto.stock),
       })),
     });
   } catch (error) {
@@ -251,11 +254,13 @@ app.post('/api/tienda/checkout', exigirSesion, async (req, res) => {
     transaccionIniciada = true;
 
     const resultado = await client.query(
-      `SELECT id, nombre, precio
+      `SELECT id, nombre, precio, stock
        FROM public.autopartes_productos
-       WHERE activo = TRUE AND id = ANY($1::varchar[])
+       WHERE activo = TRUE
+         AND plataforma IN ('PlayStation', 'Xbox', 'Nintendo')
+         AND id = ANY($1::varchar[])
        ORDER BY id
-       FOR SHARE`,
+       FOR UPDATE`,
       [[...ids]],
     );
     if (resultado.rowCount !== ids.size) {
@@ -267,6 +272,16 @@ app.post('/api/tienda/checkout', exigirSesion, async (req, res) => {
     const productos = new Map(
       resultado.rows.map((producto) => [producto.id, producto]),
     );
+    const agotado = items.find((item) => item.cantidad > Number(productos.get(item.id).stock));
+    if (agotado) {
+      const disponible = Number(productos.get(agotado.id).stock);
+      await client.query('ROLLBACK');
+      transaccionIniciada = false;
+      return res.status(409).json({
+        error: `Stock insuficiente para ${productos.get(agotado.id).nombre}. Quedan ${disponible} unidades.`,
+      });
+    }
+
     let subtotalCentavos = 0;
     const lineas = items.map((item) => {
       const producto = productos.get(item.id);
@@ -286,6 +301,23 @@ app.post('/api/tienda/checkout', exigirSesion, async (req, res) => {
       await client.query('ROLLBACK');
       transaccionIniciada = false;
       return res.status(400).json({ error: 'El total del carrito supera el monto permitido.' });
+    }
+
+    for (const linea of lineas) {
+      const actualizacion = await client.query(
+        `UPDATE public.autopartes_productos
+         SET stock = stock - $2
+         WHERE id = $1 AND stock >= $2
+         RETURNING stock`,
+        [linea.id, linea.cantidad],
+      );
+      if (actualizacion.rowCount !== 1) {
+        await client.query('ROLLBACK');
+        transaccionIniciada = false;
+        return res.status(409).json({
+          error: `El stock de ${linea.nombre} cambió. Actualiza el catálogo e inténtalo de nuevo.`,
+        });
+      }
     }
 
     const ivaCentavos = Math.round((subtotalCentavos * IVA_PORCENTAJE) / 100);
@@ -375,6 +407,9 @@ async function iniciarServidor() {
   await pool.query('SELECT id FROM public.autopartes_productos LIMIT 0');
   await pool.query('SELECT id FROM public.autopartes_facturas LIMIT 0');
   await pool.query('SELECT id FROM public.autopartes_factura_items LIMIT 0');
+  await pool.query(
+    'SELECT plataforma, stock, image_url FROM public.autopartes_productos LIMIT 0',
+  );
 
   const port = Number(process.env.PORT) || 4004;
   const server = app.listen(port, () => {
