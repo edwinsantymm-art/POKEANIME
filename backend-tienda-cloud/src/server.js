@@ -393,6 +393,8 @@ app.post('/api/tienda/checkout', exigirSesion, async (req, res) => {
   }
 });
 
+app.use('/api/admin', require('./admin'));
+
 app.use((error, req, res, next) => {
   if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
     return res.status(400).json({ error: 'El cuerpo de la solicitud no contiene JSON válido.' });
